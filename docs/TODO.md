@@ -39,7 +39,7 @@ ESD-Spike beim Hot-Plug eines RS232-Adapters (BP6 oder W&T) hat den **oberen 74L
 - **DTE/DCE-Mismatch nicht unterschätzen:** PPS-25/2 ist DTE, W&T Com-Server ist auch DTE → ohne Null-Modem-Adapter senden beide auf TX-Pin = TX-Kollision = nur Garbage. Die "0xFC"-Antworten beim ersten W&T-Versuch waren keine kaputte Hardware sondern Verkabelungsfehler. Mit Null-Modem-Adapter dazwischen läuft's sauber.
 
 ### W&T-Setup (für künftige Sessions)
-- IP 10.0.0.66, Port 8000 (Daten), Port 80 (Web-Config), Port 23 (Telnet-Banner)
+- IP <comserver-ip>, Port 8000 (Daten), Port 80 (Web-Config), Port 23 (Telnet-Banner)
 - UART-Settings: 9600, 8N1, no flow control (Standard)
 - **Null-Modem-Adapter zwischen W&T und PPS24-DB-25 erforderlich** (beide sind DTE)
 - W&T hat Single-Connection-Mode auf Port 8000 — alte TCP-Verbindung muss sauber geschlossen werden bevor neue connect, sonst "Connection refused"

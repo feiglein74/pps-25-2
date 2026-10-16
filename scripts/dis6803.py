@@ -3,7 +3,7 @@
 6803 / 6801 disassembler.
 Linearer Disassembler mit Sprungverfolgung und Annotation.
 
-Usage: ./dis6803.py firmware.bin > dis.lst
+Usage: ./dis6803.py ../firmware/firmware.bin > ../firmware/dis.lst
 """
 import sys, struct
 from collections import deque

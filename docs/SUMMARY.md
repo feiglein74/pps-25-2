@@ -124,9 +124,9 @@ Kehrt die P1.0-Polarität um → erzwingt RMCR=$05 (= internal clock) statt $0C 
 Brennen auf blanken 27C64 mit TL866II+.
 
 ## Wichtige Dateien
-- `/home/feig/pps-25-2/firmware.bin` — Original-Dump (MD5: 803de2bfb2f56135aeacf3c0f987c47b)
-- `/home/feig/pps-25-2/firmware2.bin` — Verifikations-Dump (identisch)
-- `/home/feig/pps-25-2/firmware_modified.bin` — Mod für Plan B
-- `/home/feig/pps-25-2/dis.lst` — Disassembly (1780 Instruktionen)
-- `/home/feig/pps-25-2/dis6803.py` — eigener 6803-Disassembler
-- `/home/feig/pps-25-2/probe*.py` — diverse Test-Skripte
+- `../firmware/firmware.bin` — Original-Dump (MD5: 803de2bfb2f56135aeacf3c0f987c47b)
+- `../firmware/firmware2.bin` — Verifikations-Dump (identisch)
+- `../firmware/firmware_modified.bin` — Mod für Plan B
+- `../firmware/dis.lst` — Disassembly (1780 Instruktionen)
+- `../scripts/dis6803.py` — eigener 6803-Disassembler
+- `../scripts/archive/probe*.py` — diverse Test-Skripte

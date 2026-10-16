@@ -1,0 +1,6 @@
+title: Roth PPS 25/2 — RS-232 command set & repair
+description: >-
+  Reverse-engineered documentation for the Roth PPS 25/2 (PPS-25/2) lab power supply
+  with PPS24 RS-232 interface — remote command set, firmware, hardware notes and repair.
+theme: jekyll-theme-minimal
+lang: en

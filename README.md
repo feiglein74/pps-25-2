@@ -1,4 +1,64 @@
-# Roth PPS 25/2 — Reverse Engineering & Reparatur
+# Roth PPS 25/2 — RS-232 command set, firmware & repair
+
+Reverse-engineered documentation for the **Roth PPS 25/2** (PPS-25/2) linear lab power supply
+(1991, 0–25.5 V / 0–2.55 A) with the optional **PPS24 RS-232 interface card**: full remote
+command set, firmware dump and disassembly, hardware notes and an ESD repair log.
+The original manufacturer manual appears to be lost — this is the replacement.
+
+![License](https://img.shields.io/github/license/feiglein74/pps-25-2)
+![Interface](https://img.shields.io/badge/interface-RS--232%209600%208N1-555)
+![Device](https://img.shields.io/badge/device-Roth%20PPS%2025%2F2-2b6cb0)
+
+```text
+> *IDN?
+PPS-25/2 V1.1 91.10.20
+> *ISET100      (current limit 1.00 A)
+> *VSET050      (output 5.0 V)
+> MA
+049 001         (measured: 4.9 V, 0.01 A)
+```
+
+## Quickstart
+
+```bash
+pip install pyserial
+```
+
+```python
+import serial
+ser = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)   # 8N1, no flow control
+ser.write(b"*ISET100")   # set the current limit FIRST (1.00 A)
+ser.write(b"*VSET050")   # then the voltage (5.0 V)
+ser.write(b"MA"); print(ser.read(100))   # measured V and I
+```
+
+- The PPS-25/2 is a **DTE** — with a normal USB-RS-232 adapter you need a **null-modem adapter**.
+- Without `*ISET` first, the output stays capped at ~2.2 V regardless of `*VSET`.
+- `SL` (set local) leaves remote mode **and resets all setpoints to 0**.
+- Don't hot-plug the RS-232 cable: an ESD spike killed a 74LS373 on the logic board.
+
+> Detailed documentation is in German.
+
+## Summary (English)
+
+- **Device:** Roth Hardware + Software (Grafrath, Germany), PPS 25/2, firmware "V1.1 91.10.20".
+  MC6803 CPU, 8 KB EPROM, R6522 VIA, µPD7004C ADC, 2× TLC7524 DAC (8 bit, 0.1 V / 0.01 A steps),
+  X2444 NOVRAM for 8 memory slots.
+- **State:** fully working after repair. Front panel, display, memories and RS-232 remote
+  control verified; output accuracy < 0.3 %.
+- **Command set:** `*VSET`/`*ISET` (setpoints), `*VOUT?`/`*IOUT?`, `MV`/`MC`/`MA` (measure),
+  `*IDN?`, `Y` (display self test), `@` (UART 0x55 test stream), `DD`/`DE` (display off/on)
+  and more — complete matrix with firmware addresses in [docs/COMMANDS.md](docs/COMMANDS.md).
+- **Repair:** the upper 74LS373 (keypad latch) had D6 shorted to GND after an ESD event;
+  replaced and socketed. Diagnosis log in [docs/TODO.md](docs/TODO.md).
+- **Files:** firmware dumps and disassembly in [`firmware/`](firmware/), a custom
+  6803 disassembler and test scripts in [`scripts/`](scripts/), scope captures in [`scope/`](scope/).
+- **Website:** <https://feiglein74.github.io/pps-25-2/>
+
+---
+
+## Ausführliche Dokumentation (Deutsch)
+
 
 Komplette Zerlegung, Firmware-Dump, RS-232-Protokoll-Decodierung, ESD-Schadens-Diagnose
 und Reparatur-Anleitung für das **Roth PPS 25/2 Labornetzteil** (deutsches Labornetzteil
@@ -112,11 +172,11 @@ ser.write(b"*VSET050\r")   # dann Spannung (5,0 V hier)
 
 Wenn du `*ISET<n>\r` weglässt, ist der Default-Stromlimit so niedrig, dass die Spannung
 unabhängig von `*VSET<n>` bei ~2,2 V capped. Das war das mehrtägige Mysterium während
-des Reverse Engineering — siehe [TODO.md](TODO.md) für die ganze Saga.
+des Reverse Engineering — siehe [docs/TODO.md](docs/TODO.md) für die ganze Saga.
 
 ### Befehlssatz (Übersicht)
 
-Vollständig in [COMMANDS.md](COMMANDS.md). Highlights:
+Vollständig in [docs/COMMANDS.md](docs/COMMANDS.md). Highlights:
 
 | Befehl | Wirkung |
 |---|---|
@@ -136,7 +196,7 @@ Vollständig in [COMMANDS.md](COMMANDS.md). Highlights:
 ```python
 import socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(("10.0.0.66", 8000))   # via W&T Com-Server mit Null-Modem-Adapter
+s.connect(("comserver.local", 8000))   # via W&T Com-Server mit Null-Modem-Adapter
 s.send(b"*IDN?\r")
 print(s.recv(100))   # → b'*IDN?\r\nPPS-25/2 V1.1 91.10.20\r\n'
 ```
@@ -170,27 +230,35 @@ Memory-2-Eingang zu GND auf der Platine selbst kurzgeschlossen → zurückverfol
 SN74LS373N **in einen frischen Sockel** eingelötet für künftigen einfachen Tausch.
 Zeit von "was ist los?" bis "läuft wieder komplett": ein Nachmittag.
 
-Vollständiger Diagnose-Verlauf + Methodik-Lessons in [TODO.md](TODO.md).
+Vollständiger Diagnose-Verlauf + Methodik-Lessons in [docs/TODO.md](docs/TODO.md).
 
 ## Dateien
 
-| Datei | Beschreibung |
-|---|---|
-| [README.md](README.md) | Diese Datei |
-| [COMMANDS.md](COMMANDS.md) | Vollständige RS-232-Befehlsmatrix |
-| [TODO.md](TODO.md) | RE-Historie, ESD-Schaden, Reparatur, Methodik |
-| [SUMMARY.md](SUMMARY.md) | Frühere Hardware-Notizen (größtenteils durch README abgelöst) |
-| `firmware.bin` | Original EPROM-Dump (8192 Bytes, MD5 803de2bfb2f56135aeacf3c0f987c47b) |
-| `firmware2.bin` | Verifikations-Dump (identisch) |
-| `dis.lst` | Disassembly (~1780 Instruktionen) |
-| `dis6803.py` | Eigener 6803-Disassembler mit Control-Flow-Following |
-| `cmd_phase1.py` / `cmd_phase2_inc.py` | Befehlsmatrix-Verifikations-Skripte |
-| `vset_full.py` | DAC-Sweep mit Setpoint und ADC-Messung |
-| `c_verify3.py` | CC-Mode-Trigger-Charakterisierung mit kohärentem MA-Sampling |
-| `at_loop.py` | UART-Test-Mode-Validator |
-| `c_oszi_trigger.py` | Einzelner CC-Trigger für Oszilloskop-Analyse |
-| `messwert-nach-last-watchdog/` | Tek TDS1002B Oszi-Captures vom CC-Trigger |
-| `archive/` | Frühere Erkundungs-Skripte (probe*.py, listen*.py, Baud-Sweeps etc.) |
+```
+README.md            Diese Datei
+docs/                Dokumentation
+  COMMANDS.md          Vollständige RS-232-Befehlsmatrix
+  TODO.md              RE-Historie, ESD-Schaden, Reparatur, Methodik
+  SUMMARY.md           Frühere Hardware-Notizen (größtenteils durch README abgelöst)
+firmware/            EPROM-Dumps und Disassembly
+  firmware.bin         Original-Dump (8192 Bytes, MD5 803de2bfb2f56135aeacf3c0f987c47b)
+  firmware2.bin        Verifikations-Dump (identisch)
+  firmware_modified.bin  Gepatchte Variante ($26 statt $27 bei 0x10BF, "Plan B")
+  chip_28c64a_backup.bin Dump eines 28C64A-EEPROMs (Inhalt weicht von firmware.bin ab)
+  dis.lst              Disassembly (~1780 Instruktionen)
+scripts/             Python-Werkzeuge
+  dis6803.py           Eigener 6803-Disassembler mit Control-Flow-Following
+  cmd_phase1.py        Befehlsmatrix-Verifikation
+  cmd_phase2_inc.py    Befehlsmatrix-Verifikation (inkrementell)
+  vset_full.py         DAC-Sweep mit Setpoint und ADC-Messung
+  c_verify3.py         CC-Mode-Trigger-Charakterisierung mit kohärentem MA-Sampling
+  at_loop.py           UART-Test-Mode-Validator
+  c_oszi_trigger.py    Einzelner CC-Trigger für Oszilloskop-Analyse
+  archive/             Frühere Erkundungs-Skripte (probe*.py, listen*.py, Baud-Sweeps etc.)
+scope/               Oszilloskop-Captures
+  scope.png, scope2.png
+  messwert-nach-last-watchdog/  Tek TDS1002B Captures vom CC-Trigger
+```
 
 ## Danksagung
 
